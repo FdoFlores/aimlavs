@@ -4,10 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    
 </head>
-<body>
-    <h1>User {{ name }}</h1>
+<body style="background-color: #d1d1d1;">
+    <h1>canvas</h1>
+    <div id="mousePosition"></div>
+    <div id="game-container" style="height: 400px; width: 100%;">
+        <canvas id="game" style="background-color: #979797;"></canvas>
+    </div>
 
+    <h1>chat</h1>
+    <p id="user"></p>
+    <p id="color"></p>
     <form id = "form">
         <input type="text" name="message">
     </form>
@@ -19,15 +27,47 @@
     <script type="text/javascript">
         let url = `ws://${window.location.host}/ws/socket-server/`
         const chatSocket = new WebSocket(url)
+        
+        var lastMouseX = 0;
+        var lastMouseY = 0;
 
         chatSocket.onmessage = function(e){
             let data = JSON.parse(e.data)
+            
+            if(data.type === 'user_log'){
+                console.log(data.color, data.user)
+                let users = document.getElementById('user')
+                let color = document.getElementById('color')
+                if (users.textContent.trim() !== "") {
+                    console.log("otro user se conectó");
+                } else {
+                    users.innerText += data.user
+                    color.innerText += data.color
+                }
+                
+            }
 
             if(data.type === 'chat'){
                 let messages = document.getElementById('messages')
                 messages.insertAdjacentHTML('beforeend',`<div>
                     <p>${data.message}</p>
                     </div>`)
+            }
+
+            if(data.type === 'm_move_r'){
+
+                var canvas = document.getElementById("game");
+                var color = document.getElementById("color");
+                var ctx = canvas.getContext("2d");
+                var radius = 10;
+                // ctx.clearRect(lastMouseX - radius - 1, lastMouseY - radius - 1, radius * 2 + 2, radius * 2 + 2);
+                ctx.beginPath();
+                ctx.arc(data.x_pos, data.y_pos, radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = data.color; // Fill color
+                ctx.fill(); // Fill the circle with the specified color
+                ctx.closePath(); // Close the path
+                lastMouseX = data.x_pos;
+                lastMouseY = data.y_pos;
             }
         }
 
@@ -40,6 +80,63 @@
             }))
             form.reset()
         })
+    </script>
+    <script>
+
+        // AQUI EMPIEZA LO DE DIBUJAR EL JUEGOOOOOOOO
+
+        var divcont = document.getElementById("game-container");
+        var canvas = document.getElementById("game");
+        var ctx = canvas.getContext("2d");
+        canvas.width = divcont.clientWidth
+        canvas.height = divcont.clientHeight
+        
+        var cols_const = 30
+        var rows_const = 30
+        let cols = Math.floor(canvas.width / cols_const)
+        let rows = Math.floor(canvas.height / rows_const)
+        ctx.strokeStyle = '#0c72a8'
+        for(let i = 0; i < cols + 1; i++){
+            ctx.beginPath();
+            ctx.moveTo(i * cols_const, 0)
+            ctx.lineTo(i * cols_const, canvas.height);
+            ctx.stroke();
+        }
+        for(let i = 0; i < rows + 1; i++){
+            ctx.beginPath();
+            ctx.moveTo(0, i * rows_const)
+            ctx.lineTo(canvas.width, i * rows_const);
+            ctx.stroke();
+        }
+
+        // AQUI SE ACABA LO DE DIBUJAR EL JUEGOOOOOOOO
+
+        // mouse events listeners
+        canvas.addEventListener('mousemove', onMouseMove, false);
+
+        // mouse events functions
+
+        function getMousePos(canvas, event) {
+            var rect = canvas.getBoundingClientRect();
+            return {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+        }
+
+        function onMouseMove(event){
+            var mousePos = getMousePos(canvas, event);
+            let users = document.getElementById('user')
+            let color = document.getElementById('color')
+            document.getElementById("mousePosition").textContent = 'Mouse position: ' + Math.floor(mousePos.x) + ',' + Math.floor(mousePos.y);
+            
+            chatSocket.send(JSON.stringify({
+                'x_pos': Math.floor(mousePos.x),
+                'y_pos': Math.floor(mousePos.y),
+                'user': users.innerText,
+                'color': color.innerText
+            }))
+        }
     </script>
 </body>
 </html>
