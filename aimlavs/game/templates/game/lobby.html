@@ -55,19 +55,22 @@
             }
 
             if(data.type === 'm_move_r'){
-
-                var canvas = document.getElementById("game");
-                var color = document.getElementById("color");
-                var ctx = canvas.getContext("2d");
-                var radius = 10;
-                // ctx.clearRect(lastMouseX - radius - 1, lastMouseY - radius - 1, radius * 2 + 2, radius * 2 + 2);
-                ctx.beginPath();
-                ctx.arc(data.x_pos, data.y_pos, radius, 0, Math.PI * 2, false);
-                ctx.fillStyle = data.color; // Fill color
-                ctx.fill(); // Fill the circle with the specified color
-                ctx.closePath(); // Close the path
-                lastMouseX = data.x_pos;
-                lastMouseY = data.y_pos;
+                let users = document.getElementById('user')
+                if (data.user != users.innerText){
+                    var canvas = document.getElementById("game");
+                    var color = document.getElementById("color");
+                    var ctx = canvas.getContext("2d");
+                    var radius = 3;
+                    ctx.clearRect(lastMouseX - radius - 1, lastMouseY - radius - 1, radius * 2 + 2, radius * 2 + 2);
+                    ctx.beginPath();
+                    ctx.arc(data.x_pos, data.y_pos, radius, 0, Math.PI * 2, false);
+                    ctx.fillStyle = data.color; // Fill color
+                    ctx.fill(); // Fill the circle with the specified color
+                    ctx.closePath(); // Close the path
+                    lastMouseX = data.x_pos;
+                    lastMouseY = data.y_pos;
+                }
+                
             }
         }
 
