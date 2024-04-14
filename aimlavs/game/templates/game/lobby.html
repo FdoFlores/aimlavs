@@ -10,7 +10,7 @@
     <h1>canvas</h1>
     <div id="mousePosition"></div>
     <div id="game-container" style="height: 400px; width: 100%;">
-        <canvas id="game" style="background-color: #979797;"></canvas>
+        <canvas id="game" style="background-color: #979797; cursor: none;"></canvas>
     </div>
 
     <h1>chat</h1>
@@ -28,6 +28,8 @@
         let url = `ws://${window.location.host}/ws/socket-server/`
         const chatSocket = new WebSocket(url)
         
+        let cursors = new Map();
+
         var lastMouseX = 0;
         var lastMouseY = 0;
 
@@ -56,21 +58,32 @@
 
             if(data.type === 'm_move_r'){
                 let users = document.getElementById('user')
-                if (data.user != users.innerText){
-                    var canvas = document.getElementById("game");
-                    var color = document.getElementById("color");
-                    var ctx = canvas.getContext("2d");
-                    var radius = 3;
-                    ctx.clearRect(lastMouseX - radius - 1, lastMouseY - radius - 1, radius * 2 + 2, radius * 2 + 2);
-                    ctx.beginPath();
-                    ctx.arc(data.x_pos, data.y_pos, radius, 0, Math.PI * 2, false);
-                    ctx.fillStyle = data.color; // Fill color
-                    ctx.fill(); // Fill the circle with the specified color
-                    ctx.closePath(); // Close the path
-                    lastMouseX = data.x_pos;
-                    lastMouseY = data.y_pos;
+                var canvas = document.getElementById("game");
+                var color = document.getElementById("color");
+                var ctx = canvas.getContext("2d");
+                var radius = 3;
+
+                cursors.set(data.color, [data.x_pos, data.y_pos, data.color]);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+ 
+                for (let [key, value] of cursors) {
+                    if(key != data.color){
+                        console.log('there is other cursor')
+                        ctx.beginPath();
+                        ctx.arc(value[0], value[1], radius, 0, Math.PI * 2, false);
+                        ctx.fillStyle = value[2]; // Fill color
+                        ctx.fill(); // Fill the circle with the specified color
+                        ctx.closePath(); // Close the path
+                    }
                 }
-                
+
+                ctx.beginPath();
+                ctx.arc(data.x_pos, data.y_pos, radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = data.color; // Fill color
+                ctx.fill(); // Fill the circle with the specified color
+                ctx.closePath(); // Close the path
+                lastMouseX = data.x_pos;
+                lastMouseY = data.y_pos;
             }
         }
 
