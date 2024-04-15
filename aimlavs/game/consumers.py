@@ -34,6 +34,13 @@ class ChatConsumer(WebsocketConsumer):
                 'color': self.color,
             }
         )
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name,
+            {
+                'type': 'target',
+                'coords': [random.randint(0,300),random.randint(0,300)]
+            }
+        )
 
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
@@ -92,4 +99,11 @@ class ChatConsumer(WebsocketConsumer):
             'type': 'user_log',
             'user': user,
             'color': color
+        }))
+
+    def target(self, event):
+        coords = event['coords']
+        self.send(text_data=json.dumps({
+            'type': 'target',
+            'coords': coords
         }))
